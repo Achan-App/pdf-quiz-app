@@ -58,7 +58,7 @@ if uploaded_file is not None:
                 
                 try:
                     # テキスト生成モデルを使用
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash-lite')
                     response = model.generate_content(
                         prompt,
                         generation_config={"response_mime_type": "application/json"}
