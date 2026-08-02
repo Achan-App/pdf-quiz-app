@@ -1,5 +1,6 @@
 import streamlit as st
 from google import genai
+from google.genai import types
 import pypdf
 import json
 
@@ -14,8 +15,11 @@ if not api_key:
     st.error("APIキーが設定されていません。StreamlitのSecretsを設定してください。")
     st.stop()
 
-# 最新のGemini Client初期化
-client = genai.Client(api_key=api_key)
+# APIバージョンを v1 に指定して Client を初期化（404エラー対策）
+client = genai.Client(
+    api_key=api_key,
+    http_options=types.HttpOptions(api_version="v1")
+)
 
 # サイドバーで問題数を設定
 num_questions = st.sidebar.slider("作成する問題数", min_value=1, max_value=10, value=3)
@@ -56,7 +60,7 @@ if uploaded_file is not None:
                 """
                 
                 try:
-                    # 無料枠で安定動作するモデルを指定
+                    # 安定版v1エンドポイントで呼び出し
                     response = client.models.generate_content(
                         model='gemini-1.5-flash',
                         contents=prompt,
