@@ -56,9 +56,9 @@ if uploaded_file is not None:
                 """
                 
                 try:
-                    # 最新モデル gemini-2.5-flash を呼び出し
+                    # 最新標準モデル gemini-2.5-flash を新SDK経由で呼び出し
                     response = client.models.generate_content(
-                        model='gemini-1.5-flash',
+                        model='gemini-2.5-flash',
                         contents=prompt,
                         config={'response_mime_type': 'application/json'}
                     )
