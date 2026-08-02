@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import pypdf
 import json
 
@@ -14,8 +14,8 @@ if not api_key:
     st.error("APIキーが設定されていません。StreamlitのSecretsを設定してください。")
     st.stop()
 
-# Geminiの初期設定
-genai.configure(api_key=api_key)
+# 最新のGemini Client初期化
+client = genai.Client(api_key=api_key)
 
 # サイドバーで問題数を設定
 num_questions = st.sidebar.slider("作成する問題数", min_value=1, max_value=10, value=3)
@@ -24,20 +24,19 @@ num_questions = st.sidebar.slider("作成する問題数", min_value=1, max_valu
 uploaded_file = st.file_uploader("PDFファイルをアップロードしてください", type="pdf")
 
 if uploaded_file is not None:
-    # PDFからテキストを抽出（テキストのみを取り出す処理）
+    # PDFからテキストを抽出
     reader = pypdf.PdfReader(uploaded_file)
     extracted_text = ""
     for page in reader.pages:
         extracted_text += page.extract_text() or ""
 
     if len(extracted_text.strip()) == 0:
-        st.warning("PDFからテキストを抽出できませんでした。スキャン画像などのPDFではなく、文字データが含まれているPDFをお使いください。")
+        st.warning("PDFからテキストを抽出できませんでした。文字データが含まれているPDFをお使いください。")
     else:
         st.success(f"PDFの読み込み完了（約 {len(extracted_text)} 文字）")
         
         if st.button("クイズを作成する"):
             with st.spinner("Geminiがクイズを生成中..."):
-                # Geminiへの指示プロンプト（抽出したテキストを文章として渡す）
                 prompt = f"""
                 以下の文章を読み、学習用の4択クイズを{num_questions}問作成してください。
                 出力は必ず以下のJSONフォーマットのみを返してください。装飾文や余計な解説テキストは一切不要です。
@@ -57,11 +56,11 @@ if uploaded_file is not None:
                 """
                 
                 try:
-                    # テキスト生成モデルを使用
-                    model = genai.GenerativeModel('gemini-2.5-flash-lite')
-                    response = model.generate_content(
-                        prompt,
-                        generation_config={"response_mime_type": "application/json"}
+                    # 最新モデル gemini-2.5-flash を呼び出し
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=prompt,
+                        config={'response_mime_type': 'application/json'}
                     )
                     
                     # 生成されたJSONを解析して保存
