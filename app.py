@@ -24,23 +24,23 @@ num_questions = st.sidebar.slider("作成する問題数", min_value=1, max_valu
 uploaded_file = st.file_uploader("PDFファイルをアップロードしてください", type="pdf")
 
 if uploaded_file is not None:
-    # PDFからテキストを抽出
+    # PDFからテキストを抽出（テキストのみを取り出す処理）
     reader = pypdf.PdfReader(uploaded_file)
-    text = ""
+    extracted_text = ""
     for page in reader.pages:
-        text += page.extract_text() or ""
+        extracted_text += page.extract_text() or ""
 
-    if len(text.strip()) == 0:
-        st.warning("PDFからテキストを抽出できませんでした。文字データが含まれているか確認してください。")
+    if len(extracted_text.strip()) == 0:
+        st.warning("PDFからテキストを抽出できませんでした。スキャン画像などのPDFではなく、文字データが含まれているPDFをお使いください。")
     else:
-        st.success(f"PDFの読み込み完了（約 {len(text)} 文字）")
+        st.success(f"PDFの読み込み完了（約 {len(extracted_text)} 文字）")
         
         if st.button("クイズを作成する"):
             with st.spinner("Geminiがクイズを生成中..."):
-                # Geminiへの指示プロンプト
+                # Geminiへの指示プロンプト（抽出したテキストを文章として渡す）
                 prompt = f"""
                 以下の文章を読み、学習用の4択クイズを{num_questions}問作成してください。
-                出力は必ず以下のJSONフォーマットのみを返してください。装飾文や解説文章は不要です。
+                出力は必ず以下のJSONフォーマットのみを返してください。装飾文や余計な解説テキストは一切不要です。
 
                 JSONフォーマット例:
                 [
@@ -53,18 +53,18 @@ if uploaded_file is not None:
                 ]
 
                 文章:
-                {text[:4000]}  # 文字数上限
+                {extracted_text[:3000]}
                 """
                 
                 try:
-                    # Gemini 1.5 Flashモデルでクイズ生成
+                    # テキスト生成モデルを使用
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     response = model.generate_content(
                         prompt,
                         generation_config={"response_mime_type": "application/json"}
                     )
                     
-                    # 生成されたJSONを解析してセッション状態に保存
+                    # 生成されたJSONを解析して保存
                     st.session_state.quiz_data = json.loads(response.text)
                     st.session_state.user_answers = {}
                 except Exception as e:
