@@ -58,9 +58,9 @@ if uploaded_file is not None:
                 try:
                     # 最新標準モデル gemini-2.0-flash を使用
                     response = client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=prompt,
-                        config={'response_mime_type': 'application/json'}
+                    model='gemini-2.5-flash',
+                    contents=prompt,
+                    config={'response_mime_type': 'application/json'}
                     )
                     
                     # 生成されたJSONを解析して保存
